@@ -1,0 +1,1 @@
+from book_store.Views import book_details_crud
