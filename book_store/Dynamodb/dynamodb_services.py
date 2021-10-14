@@ -1,7 +1,7 @@
 import boto3
 from django.db.models.expressions import Expression
 from book_store.Services.dbfile import database_details
-
+from boto3.dynamodb.conditions import Key
 
 def get_dbDetails(client):
 
@@ -92,8 +92,83 @@ def dynamodbUpdateItem(client,table_name,key_name,updated_values):
     except Exception as err:
         return err
 
-def dynamodbDeleteItem(client,table_name,key_name):
+def dynamodbDeleteItem(client,table_name,key_name,condition_expression):
     try:
-        print(0)
-    except print(0):
-        pass
+        client_details = get_dbDetails(client)
+
+        dynamodb = boto3.resource('dynamodb',
+                                    endpoint_url=client_details["endpoint_url"],
+                                    region_name=client_details["region_name"],
+                                    aws_access_key_id=client_details["aws_access_key_id"],
+                                    aws_secret_access_key=client_details["aws_secret_access_key"])    
+        
+        table = dynamodb.Table(table_name)
+        table.delete_item(
+            Key=key_name,
+        )
+
+        return True
+    except Exception as err:
+        return err
+
+
+def dynamodbQuery(client,table_name,**kwargs):
+    try:
+        client_details = get_dbDetails(client)
+
+        dynamodb = boto3.resource('dynamodb',
+                                    endpoint_url=client_details["endpoint_url"],
+                                    region_name=client_details["region_name"],
+                                    aws_access_key_id=client_details["aws_access_key_id"],
+                                    aws_secret_access_key=client_details["aws_secret_access_key"])    
+        
+        table = dynamodb.Table(table_name)
+        
+        condition = kwargs["condition"]
+
+        result = table.query(
+            **condition
+        )
+
+        return result["Items"]
+    except Exception as err:
+        return err
+
+
+def dynamodbScan(client,table_name,all_records,**kwargs):
+    try:
+        client_details = get_dbDetails(client)
+
+        dynamodb = boto3.resource('dynamodb',
+                                    endpoint_url=client_details["endpoint_url"],
+                                    region_name=client_details["region_name"],
+                                    aws_access_key_id=client_details["aws_access_key_id"],
+                                    aws_secret_access_key=client_details["aws_secret_access_key"])    
+        scan_kwargs={}
+
+        table = dynamodb.Table(table_name)
+        if not all_records:
+
+            if "conditions" in kwargs:
+
+                scan_kwargs = kwargs["conditions"]
+
+        done = False
+        start_key = None
+
+        res=[]
+        while not done:
+            if start_key:
+                scan_kwargs['ExclusiveStartKey'] = start_key
+            if scan_kwargs is None:
+                response = table.scan()
+            else:
+                response = table.scan(**scan_kwargs)
+
+            res=response.get('Items', [])
+            start_key = response.get('LastEvaluatedKey', None)
+            done = start_key is None
+
+        return res
+    except Exception as err:
+        return err

@@ -16,7 +16,9 @@ urlpatterns = [
     path("add_BookDetails",book_details_crud.add_BookDetails,name="add_BookDetails"),
     path("get_BookDetails",book_details_crud.get_BookDetails,name="get_BookDetails"),
     path("update_BookDetails",book_details_crud.update_BookDetails,name="update_BookDetails"),
-    # #User detail Views
-    # path('add_User',user_crud.add_User,name="add_User"),
-    # path('get_User',user_crud.validate_User,name="get_User")
+    
+    #User detail Views
+    
+    path('add_User',user_crud.add_User,name="add_User"),
+    path('get_User',user_crud.validate_User,name="get_User")
 ]
